@@ -1,3 +1,6 @@
+// #define FASTLED_ESP8266_NODEMCU_PIN_ORDER 
+#define FASTLED_ESP8266_RAW_PIN_ORDER 
+
 #include <FastLED.h>
 
 FASTLED_USING_NAMESPACE
@@ -11,14 +14,16 @@ FASTLED_USING_NAMESPACE
 //
 // -Mark Kriegsman, December 2014
 
+
+
 #if defined(FASTLED_VERSION) && (FASTLED_VERSION < 3001000)
 #warning "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
-#define DATA_PIN    10
+#define DATA_PIN    13
 #define LED_TYPE    WS2811
 #define COLOR_ORDER RGB
-#define NUM_LEDS    100
+#define NUM_LEDS    50
 CRGB leds[NUM_LEDS];
 
 #define BRIGHTNESS         230
@@ -84,14 +89,18 @@ DEFINE_GRADIENT_PALETTE( Leaf1_gp ){
 // More inspiration https://i.redd.it/6a0slunyg6xy.jpg
 
 
-CRGBPalette16 palette = LowellFall_No5_gp;
+CRGBPalette16 palette = LowellFall_No6_gp;
 // CRGBPalette16 palette = Leaf1_gp;
 
 
 
 void setup() {
-  delay(500); // 0.5 second delay for recovery
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(2000); // 2 second delay for recovery
   
+  digitalWrite(2, LOW);
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection( Typical8mmPixel );
   //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
@@ -105,11 +114,15 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, /*sinelon, */juggle /*, bpm */, jungleWithGlitter};
+// SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, /*sinelon, */juggle /*, bpm */, jungleWithGlitter};
+
+SimplePatternList gPatterns = { rainbow, juggle};
+
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
+uint8_t last = 0;
 
 void loop()
 {
@@ -124,6 +137,9 @@ void loop()
   // do some periodic updates
   EVERY_N_MILLISECONDS( 25 ) { gHue++; } // slowly cycle the "base color" through the rainbow
   EVERY_N_SECONDS( 30 ) { nextPattern(); } // change patterns periodically
+
+  EVERY_N_SECONDS( 5) { if(last==0) { digitalWrite(LED_BUILTIN, HIGH); last=1; } else { digitalWrite(LED_BUILTIN, LOW); last=0; } }
+  
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
